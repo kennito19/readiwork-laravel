@@ -15,6 +15,7 @@ class PageController extends Controller
             'crb-blacklist-check'     => Setting::servicePrice('crb-blacklist-check'),
             'full-credit-report'      => Setting::servicePrice('full-credit-report'),
             'loan-eligibility'        => Setting::servicePrice('loan-eligibility'),
+            'credit-account-history'  => Setting::servicePrice('credit-account-history'),
             'identity-scrub'          => Setting::servicePrice('identity-scrub'),
             'full-json-credit-report' => Setting::servicePrice('full-json-credit-report'),
             'enhanced-credit-info'    => Setting::servicePrice('enhanced-credit-info'),

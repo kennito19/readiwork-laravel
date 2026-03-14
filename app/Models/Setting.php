@@ -27,6 +27,7 @@ class Setting extends Model
             'crb-blacklist-check'     => 149,
             'loan-eligibility'        => 349,
             'full-credit-report'      => 499,
+            'credit-account-history'  => 299,
         ];
         $key = 'price_' . str_replace('-', '_', $serviceSlug);
         $val = static::get($key);

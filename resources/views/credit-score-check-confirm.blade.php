@@ -37,7 +37,7 @@
 .unlock-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:#16a34a;color:#fff;border:none;border-radius:12px;padding:16px 20px;font-size:1.05rem;font-weight:700;cursor:pointer;transition:background .2s,transform .15s;}
 .unlock-btn:hover{background:#15803d;transform:translateY(-1px);}
 .unlock-btn:disabled{background:#6b7280;cursor:not-allowed;transform:none;}
-@media(max-width:900px){.confirm-layout{grid-template-columns:1fr;}}
+@media(max-width:900px){.confirm-layout{grid-template-columns:1fr;}.order-card{order:-1;}}
 </style>
 @endpush
 
@@ -45,7 +45,7 @@
 <section class="confirm-hero">
     <div class="container">
         <div class="confirm-hero-eyebrow"><i class="fa-solid fa-gauge-high"></i> Credit Score Check &nbsp;&middot;&nbsp; Step 2 of 2</div>
-        <h1>Hi there &#128075; &mdash; Score Ready to Unlock</h1>
+        <h1>Hi there &#128075; , Score Ready to Unlock</h1>
         <p>National ID <strong style="color:#4ade80;">{{ $idNumber }}</strong> has been found. Complete payment below to unlock your full credit score report.</p>
     </div>
 </section>
@@ -65,8 +65,8 @@
                 </div>
                 <div style="display:grid;gap:10px;">
                     @foreach([
-                        ['fa-gauge-high',      '#6366f1', 'Credit Score (200–900)',        'Your AI-computed credit risk score on the national 200–900 scale.'],
-                        ['fa-calendar-check',  '#0ea5e9', 'Payment Performance Index (PPI)','M1–M9 rating showing how consistently you repay loans.'],
+                        ['fa-gauge-high',      '#6366f1', 'Credit Score (200 to 900)',        'Your AI-computed credit risk score on the national 200 to 900 scale.'],
+                        ['fa-calendar-check',  '#0ea5e9', 'Payment Performance Index (PPI)','M1 to M9 rating showing how consistently you repay loans.'],
                         ['fa-chart-line',      '#d97706', 'Historical Score Trend',         'Your credit score over the last 3, 6, and 12 months.'],
                         ['fa-percent',         '#dc2626', 'Probability of Default',         'The statistical likelihood of defaulting on a loan.'],
                     ] as $f)
@@ -81,7 +81,7 @@
                 </div>
                 <div style="margin-top:20px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:13px 16px;font-size:.84rem;color:#166534;display:flex;gap:10px;align-items:center;">
                     <i class="fa-solid fa-shield-halved" style="color:#16a34a;flex-shrink:0;"></i>
-                    Your result is delivered instantly after payment. Data is sourced from Metropol CRB and encrypted throughout.
+                    Your result is delivered instantly after payment. Data is sourced from Kenya CRB and encrypted throughout.
                 </div>
             </div>
 
@@ -96,10 +96,10 @@
                         </span>
                     </div>
                     <div class="order-row"><span class="order-label">National ID</span><span class="order-val">{{ $idNumber }}</span></div>
-                    <div class="order-row"><span class="order-label">Source</span><span class="order-val">Metropol CRB Kenya</span></div>
+                    <div class="order-row"><span class="order-label">Source</span><span class="order-val">Kenya Credit Bureau</span></div>
                     <div class="order-row"><span class="order-label">Delivery</span><span class="order-val">Instant <span style="color:#16a34a;font-size:.78rem;">(after payment)</span></span></div>
                     <div class="order-total"><span class="order-total-label">Total Payable</span><span class="order-total-val">KES {{ number_format($price) }}</span></div>
-                    <p style="font-size:.78rem;color:var(--text-light);line-height:1.6;margin-bottom:18px;"><i class="fa-solid fa-shield-halved" style="color:var(--primary-green);"></i> Credit score powered by Metropol CRB Kenya.</p>
+                    <p style="font-size:.78rem;color:var(--text-light);line-height:1.6;margin-bottom:18px;"><i class="fa-solid fa-shield-halved" style="color:var(--primary-green);"></i> Credit score powered by Kenya Credit Bureau.</p>
                     <div class="mpesa-section">
                         <label class="mpesa-label" for="mpesa_phone">M-Pesa Phone Number</label>
                         <div class="mpesa-input-wrap">
@@ -144,17 +144,24 @@ function initiateStk() {
 }
 
 function pollPayment(rid) {
-    let attempts = 0;
+    let attempts = 0, secs = 0;
+    const pEl = document.getElementById('stkPending'), msgEl = pEl.querySelector('p'), subEl = pEl.querySelector('small');
+    const tick = setInterval(() => {
+        secs++;
+        if (secs === 12) { msgEl.textContent = 'Processing Payment…'; subEl.textContent = 'M-Pesa is confirming. This takes 1–2 minutes — keep this page open.'; }
+        if (secs >= 12) { subEl.textContent = 'Confirming with M-Pesa… ' + secs + 's'; }
+        if (secs === 35) { subEl.innerHTML = 'Taking a moment. Already entered PIN? <a href="{{ route('credit-score-check.result') }}?rid=' + rid + '" style="color:#16a34a;font-weight:700;">Check my result →</a>'; }
+    }, 1000);
     pollInterval = setInterval(() => {
         attempts++;
         fetch('{{ route('check-payment-status') }}?rid=' + rid)
             .then(r => r.json())
             .then(data => {
-                if (data.status === 'completed' || data.status === 'paid') { clearInterval(pollInterval); showSuccess(rid); }
-                else if (data.status === 'payment_failed') { clearInterval(pollInterval); stkError(data.payment_error || 'Payment not completed.'); }
-                else if (attempts >= 36) { clearInterval(pollInterval); stkError('Payment timed out. Please try again.'); }
+                if (data.status === 'completed' || data.status === 'paid' || data.status === 'processing') { clearInterval(tick); clearInterval(pollInterval); showSuccess(rid); }
+                else if (data.status === 'payment_failed') { clearInterval(tick); clearInterval(pollInterval); stkError(data.payment_error || 'Payment not completed.'); }
+                else if (attempts >= 100) { clearInterval(tick); clearInterval(pollInterval); stkTimeout(rid); }
             }).catch(() => {});
-    }, 3000);
+    }, 5000);
 }
 
 function showSuccess(rid) {
@@ -162,8 +169,18 @@ function showSuccess(rid) {
     p.style.borderColor = '#4ade80';
     p.querySelector('.stk-spinner').style.display = 'none';
     p.querySelector('p').textContent = 'Payment Confirmed!';
-    p.querySelector('small').textContent = 'Redirecting to your result\u2026';
+    p.querySelector('small').textContent = 'Redirecting to your result…';
     setTimeout(() => { window.location.href = '{{ route('credit-score-check.result') }}?rid=' + rid; }, 1200);
+}
+
+function stkTimeout(rid) {
+    const p = document.getElementById('stkPending'), btn = document.getElementById('payBtn');
+    p.style.background = '#fffbeb'; p.style.borderColor = '#fcd34d';
+    p.querySelector('.stk-spinner').style.display = 'none';
+    p.querySelector('p').textContent = 'Taking longer than usual…';
+    p.querySelector('small').innerHTML = 'If you already paid, <a href="{{ route('credit-score-check.result') }}?rid=' + rid + '" style="color:#16a34a;font-weight:700;">click here to view your result</a> — or we\'ll keep checking.';
+    btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-mobile-screen-button"></i> Pay KES {{ number_format($price) }} via M-Pesa';
+    pollInterval = setInterval(() => { fetch('{{ route('check-payment-status') }}?rid=' + rid).then(r => r.json()).then(data => { if (data.status === 'completed' || data.status === 'paid' || data.status === 'processing') { clearInterval(pollInterval); showSuccess(rid); } }); }, 10000);
 }
 
 function stkError(msg) {

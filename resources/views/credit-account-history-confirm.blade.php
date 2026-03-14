@@ -1,10 +1,10 @@
 @extends('layouts.app')
-@section('title', 'Confirm CRB Blacklist Check - Readiwork')
+@section('title', 'Confirm Complete Financial Check - Readiwork')
 
 @push('head')
 <style>
 .confirm-hero{background:linear-gradient(135deg,#071629 0%,#0d2649 55%,#091e3a 100%);padding:40px 0 36px;}
-.confirm-hero-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(15,169,88,0.15);color:#6ee7a8;border:1px solid rgba(15,169,88,0.3);border-radius:999px;padding:4px 14px;font-size:.8rem;font-weight:600;margin-bottom:12px;}
+.confirm-hero-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(99,102,241,0.15);color:#a5b4fc;border:1px solid rgba(99,102,241,0.3);border-radius:999px;padding:4px 14px;font-size:.8rem;font-weight:600;margin-bottom:12px;}
 .confirm-hero h1{font-size:1.9rem;font-weight:800;color:#fff;margin-bottom:6px;}
 .confirm-hero p{color:rgba(255,255,255,0.6);font-size:.95rem;}
 .confirm-main{padding:40px 0 64px;background:var(--bg-light);}
@@ -21,7 +21,7 @@
 .order-val{color:var(--text-dark);font-weight:600;text-align:right;}
 .order-total{display:flex;justify-content:space-between;align-items:center;padding:16px 0 12px;border-top:2px solid var(--border-color);margin-top:4px;}
 .order-total-label{font-size:1rem;font-weight:700;color:var(--primary-navy);}
-.order-total-val{font-size:1.45rem;font-weight:800;color:var(--primary-green);}
+.order-total-val{font-size:1.45rem;font-weight:800;color:#6366f1;}
 .mpesa-section{margin-bottom:16px;}
 .mpesa-label{display:block;font-size:.85rem;font-weight:700;color:var(--primary-navy);margin-bottom:8px;}
 .mpesa-input-wrap{position:relative;}
@@ -44,9 +44,9 @@
 @section('content')
 <section class="confirm-hero">
     <div class="container">
-        <div class="confirm-hero-eyebrow"><i class="fa-solid fa-triangle-exclamation"></i> CRB Blacklist Check &nbsp;·&nbsp; Step 2 of 2</div>
+        <div class="confirm-hero-eyebrow"><i class="fa-solid fa-clock-rotate-left"></i> Complete Financial Check &nbsp;·&nbsp; Step 2 of 2</div>
         <h1>Welcome, {{ $demoName }}</h1>
-        <p>Your National ID has been verified. Complete payment to receive your CRB listing status instantly.</p>
+        <p>Your National ID has been verified. Complete payment to receive your Complete Financial Check report instantly.</p>
     </div>
 </section>
 
@@ -55,32 +55,32 @@
         <div class="confirm-layout">
             <div class="info-card-l">
                 <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;">
-                    <div style="width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#ef4444,#dc2626);display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:#fff;flex-shrink:0;"><i class="fa-solid fa-triangle-exclamation"></i></div>
-                    <div><h2 style="font-size:1.2rem;font-weight:800;color:var(--primary-navy);margin-bottom:2px;">CRB Blacklist Check</h2><p style="font-size:.88rem;color:var(--text-regular);">National ID: {{ $idNumber }}</p></div>
+                    <div style="width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#6366f1,#4f46e5);display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:#fff;flex-shrink:0;"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                    <div><h2 style="font-size:1.2rem;font-weight:800;color:var(--primary-navy);margin-bottom:2px;">Complete Financial Check</h2><p style="font-size:.88rem;color:var(--text-regular);">National ID: {{ $idNumber }}</p></div>
                 </div>
                 <div style="display:grid;gap:10px;">
-                    @foreach([['fa-triangle-exclamation','#ef4444','CRB Listing Status','Whether you are listed as a defaulter at any credit bureau in Kenya.'],['fa-sack-dollar','#d97706','Outstanding Balance','Total amount owed across all non-performing credit facilities.'],['fa-credit-card','#6366f1','Number of Credit Facilities','Count of active and non-performing credit accounts on record.'],['fa-building-columns','#0ea5e9','Reporting Institutions','Names of banks and lenders that have reported your credit status.']] as $f)
+                    @foreach([['fa-calendar-days','#6366f1','12-Month Payment History','Month by month payment status, overdue amounts, and days in arrears for every account.'],['fa-building-columns','#0ea5e9','All Credit Accounts','Full list of bank, microfinance, and mobile loan accounts registered against this National ID.'],['fa-chart-line','#16a34a','Credit Score Trend','Monthly credit score over the past 12 months showing performance direction.'],['fa-triangle-exclamation','#d97706','Arrears and NPA Summary','Total overdue amounts, non-performing accounts, and highest days in arrears.']] as $f)
                     <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:#f8fafc;border:1px solid var(--border-color);border-radius:10px;">
                         <div style="width:32px;height:32px;border-radius:8px;background:{{ $f[1] }}18;color:{{ $f[1] }};display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0;"><i class="fa-solid {{ $f[0] }}"></i></div>
                         <div><div style="font-size:.88rem;font-weight:600;color:var(--primary-navy);margin-bottom:2px;">{{ $f[2] }}</div><div style="font-size:.76rem;color:var(--text-light);">{{ $f[3] }}</div></div>
                     </div>
                     @endforeach
                 </div>
-                <div style="margin-top:20px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:13px 16px;font-size:.84rem;color:#166534;display:flex;gap:10px;align-items:center;">
-                    <i class="fa-solid fa-shield-halved" style="color:#16a34a;flex-shrink:0;"></i>
-                    Your result is delivered instantly after payment. Data is sourced from Kenya CRB and encrypted throughout.
+                <div style="margin-top:20px;background:#f0f4ff;border:1px solid #c7d2fe;border-radius:10px;padding:13px 16px;font-size:.84rem;color:#3730a3;display:flex;gap:10px;align-items:center;">
+                    <i class="fa-solid fa-shield-halved" style="color:#6366f1;flex-shrink:0;"></i>
+                    Your report is delivered instantly after payment. Data is sourced from Kenya CRB and encrypted throughout.
                 </div>
             </div>
 
             <div class="order-card">
                 <div class="order-card-head"><h3>Order Summary</h3><p>Review before you pay</p></div>
                 <div class="order-card-body">
-                    <div class="order-row"><span class="order-label">Service</span><span class="order-val">CRB Blacklist Check</span></div>
+                    <div class="order-row"><span class="order-label">Service</span><span class="order-val">Complete Financial Check</span></div>
                     <div class="order-row"><span class="order-label">National ID</span><span class="order-val">{{ $idNumber }}</span></div>
                     <div class="order-row"><span class="order-label">Source</span><span class="order-val">Kenya Credit Bureau</span></div>
                     <div class="order-row"><span class="order-label">Delivery</span><span class="order-val">Instant <span style="color:#16a34a;font-size:.78rem;">(after payment)</span></span></div>
                     <div class="order-total"><span class="order-total-label">Total Payable</span><span class="order-total-val">KES {{ number_format($price) }}</span></div>
-                    <p style="font-size:.78rem;color:var(--text-light);line-height:1.6;margin-bottom:18px;"><i class="fa-solid fa-shield-halved" style="color:var(--primary-green);"></i> CRB data powered by Kenya Credit Bureau.</p>
+                    <p style="font-size:.78rem;color:var(--text-light);line-height:1.6;margin-bottom:18px;"><i class="fa-solid fa-shield-halved" style="color:#6366f1;"></i> Complete Financial Check powered by Kenya Credit Bureau.</p>
                     <div class="mpesa-section">
                         <label class="mpesa-label" for="mpesa_phone">M-Pesa Phone Number</label>
                         <div class="mpesa-input-wrap">
@@ -92,7 +92,7 @@
                     <div class="stk-pending" id="stkPending"><div class="stk-spinner"></div><p>STK Push Sent!</p><small>Check your phone and enter your M-Pesa PIN.</small></div>
                     <button type="button" class="unlock-btn" id="payBtn" onclick="initiateStk()"><i class="fa-solid fa-mobile-screen-button"></i> Pay KES {{ number_format($price) }} via M-Pesa</button>
                     <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px;"><span style="font-size:.78rem;color:#6b7280;">Secured by</span><span style="font-weight:800;color:#16a34a;font-size:.92rem;">M-PESA</span></div>
-                    <p style="text-align:center;margin-top:14px;font-size:.85rem;"><a href="{{ route('crb-blacklist-check') }}" style="color:var(--primary-green);font-weight:600;"><i class="fa-solid fa-arrow-left"></i> Run a different check</a></p>
+                    <p style="text-align:center;margin-top:14px;font-size:.85rem;"><a href="{{ route('credit-account-history') }}" style="color:#6366f1;font-weight:600;"><i class="fa-solid fa-arrow-left"></i> Run a different check</a></p>
                 </div>
             </div>
         </div>
@@ -111,13 +111,13 @@ function initiateStk() {
     phoneInput.style.borderColor='#16a34a';
     const btn=document.getElementById('payBtn'),pending=document.getElementById('stkPending');
     btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Sending STK Push&hellip;';pending.classList.add('show');
-    fetch('{{ route('stk-push') }}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},body:JSON.stringify({phone:raw,amount:{{ (int)$price }},service:'crb-blacklist-check',id:ID_NUMBER,record_id:RECORD_ID})})
+    fetch('{{ route('stk-push') }}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},body:JSON.stringify({phone:raw,amount:{{ (int)$price }},service:'credit-account-history',id:ID_NUMBER,record_id:RECORD_ID})})
     .then(r=>r.json()).then(data=>{if(data.success){pollPayment(data.request_id);}else{stkError(data.message||'Payment request failed.');}}).catch(()=>stkError('Network error.'));
 }
-function pollPayment(rid){let attempts=0,secs=0;const pEl=document.getElementById('stkPending'),msgEl=pEl.querySelector('p'),subEl=pEl.querySelector('small');const tick=setInterval(()=>{secs++;if(secs===12){msgEl.textContent='Processing Payment…';subEl.textContent='M-Pesa is confirming. This takes 1–2 minutes — keep this page open.';}if(secs>=12){subEl.textContent='Confirming with M-Pesa… '+secs+'s';}if(secs===35){subEl.innerHTML='Taking a moment. Already entered PIN? <a href="{{ route('crb-blacklist-check.result') }}?rid='+rid+'" style="color:#16a34a;font-weight:700;">Check my result →</a>';}},1000);pollInterval=setInterval(()=>{attempts++;fetch('{{ route('check-payment-status') }}?rid='+rid).then(r=>r.json()).then(data=>{if(data.status==='completed'||data.status==='paid'||data.status==='processing'){clearInterval(tick);clearInterval(pollInterval);showSuccess(rid);}else if(data.status==='payment_failed'){clearInterval(tick);clearInterval(pollInterval);stkError(data.payment_error||'Payment not completed.');}else if(attempts>=100){clearInterval(tick);clearInterval(pollInterval);stkTimeout(rid);}}).catch(()=>{});},5000);}
-function stkTimeout(rid){const p=document.getElementById('stkPending'),btn=document.getElementById('payBtn');p.style.background='#fffbeb';p.style.borderColor='#fcd34d';p.querySelector('.stk-spinner').style.display='none';p.querySelector('p').textContent='Taking longer than usual…';p.querySelector('small').innerHTML='If you already paid, <a href="{{ route('crb-blacklist-check.result') }}?rid='+rid+'" style="color:#16a34a;font-weight:700;">click here to view your result</a> — or we\'ll keep checking.';btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-mobile-screen-button"></i> Pay KES {{ number_format($price) }} via M-Pesa';pollInterval=setInterval(()=>{fetch('{{ route('check-payment-status') }}?rid='+rid).then(r=>r.json()).then(data=>{if(data.status==='completed'||data.status==='paid'||data.status==='processing'){clearInterval(pollInterval);showSuccess(rid);}});},10000);}
-function showSuccess(rid){const p=document.getElementById('stkPending');p.style.borderColor='#4ade80';p.querySelector('.stk-spinner').style.display='none';p.querySelector('p').textContent='Payment Confirmed!';p.querySelector('small').textContent='Redirecting to your result…';setTimeout(()=>{window.location.href='{{ route('crb-blacklist-check.result') }}?rid='+rid;},1200);}
-function stkError(msg){clearInterval(pollInterval);const p=document.getElementById('stkPending'),btn=document.getElementById('payBtn');p.classList.remove('show');btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-mobile-screen-button"></i> Pay KES {{ number_format($price) }} via M-Pesa';let err=document.getElementById('stkErr');if(!err){err=document.createElement('p');err.id='stkErr';err.style.cssText='color:#dc2626;font-size:.82rem;margin:8px 0 0;text-align:center;';btn.parentNode.insertBefore(err,btn.nextSibling);}err.textContent=msg;}
+function pollPayment(rid){let attempts=0,secs=0;const pEl=document.getElementById('stkPending'),msgEl=pEl.querySelector('p'),subEl=pEl.querySelector('small');const tick=setInterval(()=>{secs++;if(secs===12){msgEl.textContent='Processing Payment…';subEl.textContent='M-Pesa is confirming. This takes 1–2 minutes — keep this page open.';}if(secs>=12){subEl.textContent='Confirming with M-Pesa… '+secs+'s';}if(secs===35){subEl.innerHTML='Taking a moment. Already entered PIN? <a href="{{ route('credit-account-history.result') }}?rid='+rid+'" style="color:#16a34a;font-weight:700;">Check my result →</a>';}},1000);pollInterval=setInterval(()=>{attempts++;fetch('{{ route('check-payment-status') }}?rid='+rid).then(r=>r.json()).then(data=>{if(data.status==='completed'||data.status==='paid'||data.status==='processing'){clearInterval(tick);clearInterval(pollInterval);showSuccess(rid);}else if(data.status==='payment_failed'){clearInterval(tick);clearInterval(pollInterval);stkError(data.payment_error||'Payment not completed.',rid);}else if(attempts>=100){clearInterval(tick);clearInterval(pollInterval);stkTimeout(rid);}}).catch(()=>{});},5000);}
+function showSuccess(rid){const p=document.getElementById('stkPending');p.style.borderColor='#4ade80';p.querySelector('.stk-spinner').style.display='none';p.querySelector('p').textContent='Payment Confirmed!';p.querySelector('small').textContent='Redirecting to your report…';setTimeout(()=>{window.location.href='{{ route('credit-account-history.result') }}?rid='+rid;},1200);}
+function stkTimeout(rid){const p=document.getElementById('stkPending'),btn=document.getElementById('payBtn');p.style.background='#fffbeb';p.style.borderColor='#fcd34d';p.querySelector('.stk-spinner').style.display='none';p.querySelector('p').textContent='Taking longer than usual…';p.querySelector('small').innerHTML='If you already paid, <a href="{{ route('credit-account-history.result') }}?rid='+rid+'" style="color:#16a34a;font-weight:700;">click here to view your report</a> — or wait and we\'ll keep checking.';btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-mobile-screen-button"></i> Pay KES {{ number_format($price) }} via M-Pesa';pollInterval=setInterval(()=>{fetch('{{ route('check-payment-status') }}?rid='+rid).then(r=>r.json()).then(data=>{if(data.status==='completed'||data.status==='paid'||data.status==='processing'){clearInterval(pollInterval);showSuccess(rid);}});},10000);}
+function stkError(msg,rid){clearInterval(pollInterval);const p=document.getElementById('stkPending'),btn=document.getElementById('payBtn');p.classList.remove('show');btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-mobile-screen-button"></i> Pay KES {{ number_format($price) }} via M-Pesa';let err=document.getElementById('stkErr');if(!err){err=document.createElement('p');err.id='stkErr';err.style.cssText='color:#dc2626;font-size:.82rem;margin:8px 0 0;text-align:center;';btn.parentNode.insertBefore(err,btn.nextSibling);}err.textContent=msg;}
 document.getElementById('mpesa_phone').addEventListener('input',function(){this.style.borderColor='';const e=document.getElementById('stkErr');if(e) e.textContent='';});
 </script>
 @endpush

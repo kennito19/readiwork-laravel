@@ -1,6 +1,25 @@
 @extends('layouts.app')
 @section('title', 'Readiwork - Instant Credit Checks for Kenyan Businesses')
 
+@push('head')
+<style>
+.sv2-scroll-wrap{position:relative;padding:0 22px;}
+.sv2-grid{display:flex!important;flex-wrap:nowrap!important;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding-bottom:10px;scrollbar-width:none;}
+.sv2-grid::-webkit-scrollbar{display:none;}
+.sv2-grid .sv2-card{flex:0 0 calc((100% - 40px) / 5.3)!important;min-width:170px;max-width:260px;scroll-snap-align:start;}
+@media(max-width:1100px){.sv2-grid .sv2-card{flex:0 0 calc((100% - 32px) / 3.2)!important;}}
+@media(max-width:640px){.sv2-grid .sv2-card{flex:0 0 calc((100% - 16px) / 1.3)!important;}}
+/* scroll arrows */
+.sv2-arrow{position:absolute;top:50%;transform:translateY(-60%);z-index:10;width:36px;height:36px;border-radius:50%;background:#fff;border:1.5px solid #e2e8f0;box-shadow:0 2px 12px rgba(11,31,59,.12);cursor:pointer;display:flex;align-items:center;justify-content:center;color:#0b1f3b;font-size:.85rem;transition:background .15s,box-shadow .15s,opacity .2s;opacity:0;pointer-events:none;}
+.sv2-arrow.visible{opacity:1;pointer-events:auto;}
+.sv2-arrow:hover{background:#0FA958;border-color:#0FA958;color:#fff;box-shadow:0 4px 16px rgba(15,169,88,.3);}
+.sv2-arrow--prev{left:0;}
+.sv2-arrow--next{right:0;}
+.sv2-arrow--next::after{content:'';position:absolute;top:0;right:36px;bottom:0;width:80px;background:linear-gradient(to right,transparent,var(--bg-light,#f5f7fa));pointer-events:none;}
+@media(max-width:640px){.sv2-scroll-wrap{padding:0 18px;}.sv2-arrow{width:28px;height:28px;font-size:.7rem;}.sv2-arrow--prev{left:0;}.sv2-arrow--next{right:0;}}
+</style>
+@endpush
+
 @section('content')
     <!-- ===== HERO ===== -->
     <section class="hero-wrap hero-wrap--dark">
@@ -61,9 +80,12 @@
             <div class="section-header">
                 <p class="section-eyebrow">What We Offer</p>
                 <h2 class="section-title">Everything in One Place</h2>
-                <p class="section-subtitle">Five core checks, all pulling live data directly from AI through a single API key.</p>
+                <p class="section-subtitle">Six core checks, all pulling live data directly from AI through a single API key.</p>
             </div>
-            <div class="sv2-grid">
+            <div class="sv2-scroll-wrap">
+            <button class="sv2-arrow sv2-arrow--prev" id="sv2Prev" onclick="sv2Scroll(-1)" aria-label="Previous"><i class="fa-solid fa-chevron-left"></i></button>
+            <button class="sv2-arrow sv2-arrow--next visible" id="sv2Next" onclick="sv2Scroll(1)" aria-label="Next"><i class="fa-solid fa-chevron-right"></i></button>
+            <div class="sv2-grid" id="sv2Grid">
                 <a href="{{ route('identity-verification') }}" class="sv2-card">
                     <div class="sv2-icon-wrap" style="background: rgba(15,169,88,0.1);"><svg width="32" height="32" viewBox="0 0 48 48" fill="none"><path d="M12 16C12 14.9 12.9 14 14 14H34C35.1 14 36 14.9 36 16V32C36 33.1 35.1 34 34 34H14C12.9 34 12 33.1 12 32V16Z" stroke="#0FA958" stroke-width="2.5"/><circle cx="19" cy="22" r="3" fill="#0FA958"/><path d="M26 20H32M26 25H32M15 30H23" stroke="#0FA958" stroke-width="2" stroke-linecap="round"/></svg></div>
                     <div class="sv2-provider-badge" style="background:#eff6ff; color:#0B1F3B;">AI</div>
@@ -99,7 +121,15 @@
                     <p>One call combines identity verification, Credit Score, and loan default data to give a clear eligible or not eligible result.</p>
                     <span class="sv2-link">Get started <i class="fa-solid fa-arrow-right"></i></span>
                 </a>
+                <a href="{{ route('credit-account-history') }}" class="sv2-card">
+                    <div class="sv2-icon-wrap" style="background: rgba(99,102,241,0.08);"><svg width="32" height="32" viewBox="0 0 48 48" fill="none"><path d="M12 14H36M12 22H30M12 30H24" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round"/><circle cx="38" cy="32" r="6" stroke="#6366f1" stroke-width="2.5" fill="none"/><path d="M36 30L38 32L42 28" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <div class="sv2-provider-badge" style="background:#eef2ff; color:#6366f1;">AI</div>
+                    <h3>Complete Financial Check <span class="sv2-new-badge">New</span></h3>
+                    <p>Full 12-month payment history for every credit account, score trends, overdue amounts, and lender breakdown.</p>
+                    <span class="sv2-link">Get started <i class="fa-solid fa-arrow-right"></i></span>
+                </a>
             </div>
+            </div>{{-- end sv2-scroll-wrap --}}
             <div class="search-container">
                 <i class="fa-solid fa-magnifying-glass" style="color:#9ca3af; margin-left:20px;"></i>
                 <input type="text" id="quickIdInput" class="search-input" placeholder="Enter a National ID number to run a quick check" inputmode="numeric" maxlength="10">
@@ -341,12 +371,34 @@
 <script src="{{ asset('protect.js') }}"></script>
 <script src="{{ asset('interactive-bg.js') }}"></script>
 <script>
+(function(){
+    var grid=document.getElementById('sv2Grid');
+    var prev=document.getElementById('sv2Prev');
+    var next=document.getElementById('sv2Next');
+    if(!grid||!prev||!next) return;
+    function updateArrows(){
+        var atStart=grid.scrollLeft<=8;
+        var atEnd=grid.scrollLeft+grid.clientWidth>=grid.scrollWidth-8;
+        prev.classList.toggle('visible',!atStart);
+        next.classList.toggle('visible',!atEnd);
+    }
+    window.sv2Scroll=function(dir){
+        var card=grid.querySelector('.sv2-card');
+        var step=card?(card.offsetWidth+16)*2:320;
+        grid.scrollBy({left:dir*step,behavior:'smooth'});
+    };
+    grid.addEventListener('scroll',updateArrows,{passive:true});
+    updateArrows();
+})();
+</script>
+<script>
     const SERVICES = [
         { slug:'identity-verification',  confirm:'{{ route('identity-verification.confirm') }}',  name:'Identity Verification', desc:'Confirm full name, DOB, gender & district from the national registry.', icon:'fa-id-card',             color:'#0FA958', price:{{ \App\Models\Setting::servicePrice('identity-verification') }}  },
-        { slug:'credit-score-check',     confirm:'{{ route('credit-score-check.confirm') }}',     name:'Credit Score Check',    desc:'Get your exact CRB credit score (200–900) with tier & risk analysis.', icon:'fa-gauge-high',          color:'#6366f1', price:{{ \App\Models\Setting::servicePrice('credit-score-check') }} },
+        { slug:'credit-score-check',     confirm:'{{ route('credit-score-check.confirm') }}',     name:'Credit Score Check',    desc:'Get your exact CRB credit score (200 to 900) with tier & risk analysis.', icon:'fa-gauge-high',          color:'#6366f1', price:{{ \App\Models\Setting::servicePrice('credit-score-check') }} },
         { slug:'crb-blacklist-check',    confirm:'{{ route('crb-blacklist-check.confirm') }}',    name:'CRB Blacklist Check',   desc:'Find out if you have unpaid or defaulted loans listed on the CRB.',     icon:'fa-triangle-exclamation',color:'#ef4444', price:{{ \App\Models\Setting::servicePrice('crb-blacklist-check') }} },
         { slug:'loan-eligibility',       confirm:'{{ route('loan-eligibility.confirm') }}',       name:'Loan Eligibility Check',desc:'Combined check: identity + score + blacklist → Eligible or Not.',        icon:'fa-circle-check',        color:'#0FA958', price:{{ \App\Models\Setting::servicePrice('loan-eligibility') }} },
         { slug:'full-credit-report',     confirm:'{{ route('full-credit-report.confirm') }}',     name:'Full Credit Report',    desc:'Complete report: identity, score, all accounts, sectors & institutions.', icon:'fa-file-lines',          color:'#0ea5e9', price:{{ \App\Models\Setting::servicePrice('full-credit-report') }} },
+        { slug:'credit-account-history', confirm:'{{ route('credit-account-history.confirm') }}', name:'Complete Financial Check', desc:'12-month payment history for every account, score trends and arrears detail.', icon:'fa-clock-rotate-left', color:'#6366f1', price:{{ \App\Models\Setting::servicePrice('credit-account-history') }} },
     ];
 
     let _verifiedId = '', _verifiedName = '';
@@ -359,7 +411,7 @@
             inp.style.boxShadow   = '0 0 0 3px rgba(239,68,68,.15)';
             inp.focus();
             const origPH = inp.placeholder;
-            inp.placeholder = 'Enter a valid 6–10 digit National ID';
+            inp.placeholder = 'Enter a valid 6 to 10 digit National ID';
             setTimeout(() => { inp.style.borderColor=''; inp.style.boxShadow=''; inp.placeholder=origPH; }, 3000);
             return;
         }
@@ -412,7 +464,7 @@
             _verifiedId = raw; _verifiedName = data.name || '';
             setTimeout(() => {
                 bar.style.width = '100%'; headline.textContent = 'Identity Found ✓';
-                sub.textContent = _verifiedName ? ('Welcome, ' + _verifiedName) : 'Record confirmed — choose a service below';
+                sub.textContent = _verifiedName ? ('Welcome, ' + _verifiedName) : 'Record confirmed, choose a service below';
                 document.getElementById('pickerLoaderIcon').innerHTML = '<i class="fa-solid fa-circle-check" style="font-size:1.8rem;color:#0FA958;"></i>';
                 setTimeout(() => {
                     const cards = document.getElementById('servicePickerCards');

@@ -176,6 +176,22 @@
                 </ul>
                 <a href="{{ route('loan-eligibility') }}" class="svcs-card-cta svcs-card-cta--green">Check Now <i class="fa-solid fa-arrow-right fa-xs"></i></a>
             </div>
+
+            <div class="svcs-card svcs-card--blue">
+                <span class="svcs-new-pill">New</span>
+                <div class="svcs-card-icon" style="background:rgba(99,102,241,.12);color:#6366f1;"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                <div class="svcs-card-head">
+                    <h3>Complete Financial Check</h3>
+                    <span class="svcs-price-tag">KSh {{ number_format($prices['credit-account-history'] ?? 299) }}</span>
+                </div>
+                <p class="svcs-card-desc">See every credit account and its full 12-month payment history. Understand score trends, overdue amounts, and month by month behaviour before making a credit decision.</p>
+                <ul class="svcs-card-features">
+                    <li><i class="fa-solid fa-circle-check" style="color:#6366f1;"></i> 12-month payment history per account</li>
+                    <li><i class="fa-solid fa-circle-check" style="color:#6366f1;"></i> Monthly credit score trend (12 months)</li>
+                    <li><i class="fa-solid fa-circle-check" style="color:#6366f1;"></i> Outstanding balances, overdue and NPA detail</li>
+                </ul>
+                <a href="{{ route('credit-account-history') }}" class="svcs-card-cta" style="background:#6366f1;color:#fff;">View Report <i class="fa-solid fa-arrow-right fa-xs"></i></a>
+            </div>
         </div>
     </div>
 </section>

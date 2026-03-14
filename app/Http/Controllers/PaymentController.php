@@ -96,12 +96,13 @@ class PaymentController extends Controller
             $mpesa = new MpesaService();
             $stkStatus = $mpesa->queryStkStatus($row->checkout_request_id);
             if ($stkStatus !== null) {
-                if ($stkStatus['ResultCode'] === '0') {
+                $resultCode = (int)$stkStatus['ResultCode'];
+                if ($resultCode === 0) {
                     $row->update(['status' => 'paid', 'mpesa_receipt_number' => 'STK-CONFIRMED-' . time()]);
                     $row->status = 'paid';
-                } elseif (in_array($stkStatus['ResultCode'], ['1032', '1', '2001', '17'])) {
-                    $errMap = ['1032' => 'Cancelled by user', '1' => 'Insufficient funds', '2001' => 'Wrong PIN', '17' => 'Not registered for M-Pesa'];
-                    $errMsg = $errMap[$stkStatus['ResultCode']] ?? 'Payment failed (code ' . $stkStatus['ResultCode'] . ')';
+                } elseif (in_array($resultCode, [1032, 1, 2001, 17])) {
+                    $errMap = [1032 => 'Cancelled by user', 1 => 'Insufficient funds', 2001 => 'Wrong PIN', 17 => 'Not registered for M-Pesa'];
+                    $errMsg = $errMap[$resultCode] ?? 'Payment failed (code ' . $resultCode . ')';
                     $row->update(['status' => 'payment_failed', 'payment_error' => $errMsg]);
                     $row->status        = 'payment_failed';
                     $row->payment_error = $errMsg;
@@ -170,11 +171,12 @@ class PaymentController extends Controller
                     $service    = $req->service;
                     $metropol   = new MetropolService();
                     $crb        = match($service) {
-                        'identity-verification' => $metropol->identityVerification($req->national_id),
-                        'credit-score-check'    => $metropol->creditScoreCheck($req->national_id),
-                        'crb-blacklist-check'   => $metropol->blacklistCheck($req->national_id),
-                        'full-credit-report'    => $metropol->fullCreditReport($req->national_id),
-                        default                 => $metropol->loanEligibility($req->national_id),
+                        'identity-verification'  => $metropol->identityVerification($req->national_id),
+                        'credit-score-check'     => $metropol->creditScoreCheck($req->national_id),
+                        'crb-blacklist-check'    => $metropol->blacklistCheck($req->national_id),
+                        'full-credit-report'     => $metropol->fullCreditReport($req->national_id),
+                        'credit-account-history' => $metropol->creditAccountHistory($req->national_id),
+                        default                  => $metropol->loanEligibility($req->national_id),
                     };
 
                     $identity = $crb['identity'] ?? $crb['verify'] ?? [];

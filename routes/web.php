@@ -8,6 +8,7 @@ use App\Http\Controllers\IdentityVerificationController;
 use App\Http\Controllers\CreditScoreController;
 use App\Http\Controllers\CrbBlacklistController;
 use App\Http\Controllers\FullCreditReportController;
+use App\Http\Controllers\CreditAccountHistoryController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Admin\AuthController as AdminAuth;
 use App\Http\Controllers\Admin\DashboardController;
@@ -62,6 +63,12 @@ Route::get( '/full-credit-report',             [FullCreditReportController::clas
 Route::post('/full-credit-report/confirm',     [FullCreditReportController::class, 'confirm'])->name('full-credit-report.confirm');
 Route::get( '/full-credit-report/result',      [FullCreditReportController::class, 'result'])->name('full-credit-report.result');
 Route::get( '/full-credit-report/pdf/{rid}',   [FullCreditReportController::class, 'downloadPdf'])->name('full-credit-report.pdf');
+
+// ── Credit Account History ────────────────────────────────────────────────────
+Route::get( '/credit-account-history',             [CreditAccountHistoryController::class, 'index'])->name('credit-account-history');
+Route::post('/credit-account-history/confirm',     [CreditAccountHistoryController::class, 'confirm'])->name('credit-account-history.confirm');
+Route::get( '/credit-account-history/result',      [CreditAccountHistoryController::class, 'result'])->name('credit-account-history.result');
+Route::get( '/credit-account-history/pdf/{rid}',   [CreditAccountHistoryController::class, 'downloadPdf'])->name('credit-account-history.pdf');
 
 // ── Utility AJAX ─────────────────────────────────────────────────────────────
 Route::post('/verify-id',  [\App\Http\Controllers\VerifyIdController::class,  'verify'])->name('verify-id');

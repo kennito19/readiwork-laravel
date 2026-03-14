@@ -204,6 +204,7 @@
 }
 @media (max-width: 980px) {
     .confirm-layout { grid-template-columns: 1fr; }
+    .order-card { order: -1; }
 }
 </style>
 @endpush
@@ -215,7 +216,7 @@
             <i class="fa-solid fa-file-lines"></i> Full Credit Report &nbsp;·&nbsp; Step 2 of 2
         </div>
         <h1>Confirm &amp; Pay for Your Report</h1>
-        <p>Review the details below and complete payment via M-Pesa to instantly receive your full credit report from Metropol CRB.</p>
+        <p>Review the details below and complete payment via M-Pesa to instantly receive your full credit report from Kenya CRB.</p>
     </div>
 </section>
 
@@ -237,8 +238,8 @@
                 <div class="row g-3">
                     @foreach([
                         ['fa-id-card',          '#0FA958', 'Verified Identity',       'Full name, DOB, gender & registration details from IPRS & CRB'],
-                        ['fa-gauge-high',        '#6366f1', 'Credit Score + PPI',      'Current score (200–900) and 12-month Payment Performance trend'],
-                        ['fa-building-columns',  '#0ea5e9', 'All Credit Accounts',     'Complete list — active, closed, balances, arrears & history'],
+                        ['fa-gauge-high',        '#6366f1', 'Credit Score + PPI',      'Current score (200 to 900) and 12-month Payment Performance trend'],
+                        ['fa-building-columns',  '#0ea5e9', 'All Credit Accounts',     'Complete list, active, closed, balances, arrears & history'],
                         ['fa-chart-line',        '#d97706', 'Score & PPI Trend',       'Last 12 months Metro Score & PPI movement'],
                         ['fa-chart-bar',         '#16a34a', 'Sector Breakdown',        'Exposure across banks, MFIs, SACCOs & digital lenders'],
                         ['fa-shield-halved',     '#dc2626', 'Enquiries & Defaults',    'Recent checks, applications, bounced cheques & listings'],
@@ -260,7 +261,7 @@
                 <div class="mt-4 p-3 bg-success-subtle border border-success-subtle rounded-3 d-flex align-items-center gap-3">
                     <i class="fa-solid fa-lock fa-lg" style="color:#16a34a;"></i>
                     <div style="font-size:.9rem;color:#166534;">
-                        Your report is encrypted and delivered instantly after payment. Data sourced directly from Metropol CRB.
+                        Your report is encrypted and delivered instantly after payment. Data sourced directly from Kenya CRB.
                     </div>
                 </div>
             </div>
@@ -274,7 +275,7 @@
                 <div class="order-card-body">
                     <div class="order-row"><span class="order-label">Service</span><span class="order-val">Full Enhanced Credit Report</span></div>
                     <div class="order-row"><span class="order-label">National ID</span><span class="order-val">{{ $idNumber }}</span></div>
-                    <div class="order-row"><span class="order-label">Provider</span><span class="order-val">Metropol CRB</span></div>
+                    <div class="order-row"><span class="order-label">Provider</span><span class="order-val">Kenya CRB</span></div>
                     <div class="order-row"><span class="order-label">Delivery</span><span class="order-val">Instant after payment</span></div>
                     <div class="order-row"><span class="order-label">Format</span><span class="order-val">Detailed Digital Report</span></div>
 
@@ -358,25 +359,25 @@ function initiateStk() {
 }
 
 function pollPayment(stkRequestId) {
-    let attempts = 0;
+    let attempts = 0, secs = 0;
+    const pEl = document.getElementById('stkPending'), msgEl = pEl.querySelector('p'), subEl = pEl.querySelector('small');
+    const tick = setInterval(() => {
+        secs++;
+        if (secs === 12) { msgEl.textContent = 'Processing Payment…'; subEl.textContent = 'M-Pesa is confirming. This takes 1–2 minutes — keep this page open.'; }
+        if (secs >= 12) { subEl.textContent = 'Confirming with M-Pesa… ' + secs + 's'; }
+        if (secs === 35) { subEl.innerHTML = 'Taking a moment. Already entered PIN? <a href="{{ route('full-credit-report.result') }}?rid=' + RECORD_ID + '" style="color:#16a34a;font-weight:700;">Check my result →</a>'; }
+    }, 1000);
     pollInterval = setInterval(() => {
         attempts++;
         fetch('{{ route('check-payment-status') }}?rid=' + stkRequestId)
             .then(r => r.json())
             .then(data => {
-                if (data.status === 'completed' || data.status === 'paid') {
-                    clearInterval(pollInterval);
-                    showSuccess();
-                } else if (data.status === 'payment_failed') {
-                    clearInterval(pollInterval);
-                    stkError(data.payment_error || 'Payment was not completed.');
-                } else if (attempts >= 40) {
-                    clearInterval(pollInterval);
-                    stkError('Payment timed out. Please try again.');
-                }
+                if (data.status === 'completed' || data.status === 'paid' || data.status === 'processing') { clearInterval(tick); clearInterval(pollInterval); showSuccess(); }
+                else if (data.status === 'payment_failed') { clearInterval(tick); clearInterval(pollInterval); stkError(data.payment_error || 'Payment was not completed.'); }
+                else if (attempts >= 100) { clearInterval(tick); clearInterval(pollInterval); stkTimeout(stkRequestId); }
             })
             .catch(() => {});
-    }, 3000);
+    }, 5000);
 }
 
 function showSuccess() {
@@ -384,10 +385,20 @@ function showSuccess() {
     pending.style.borderColor = '#4ade80';
     pending.querySelector('.stk-spinner').style.display = 'none';
     pending.querySelector('p').textContent = 'Payment Successful!';
-    pending.querySelector('small').textContent = 'Loading your full credit report\u2026';
+    pending.querySelector('small').textContent = 'Loading your full credit report…';
     setTimeout(() => {
         window.location.href = '{{ route('full-credit-report.result') }}?rid=' + RECORD_ID;
     }, 1500);
+}
+
+function stkTimeout(rid) {
+    const pending = document.getElementById('stkPending'), btn = document.getElementById('payBtn');
+    pending.style.background = '#fffbeb'; pending.style.borderColor = '#fcd34d';
+    pending.querySelector('.stk-spinner').style.display = 'none';
+    pending.querySelector('p').textContent = 'Taking longer than usual…';
+    pending.querySelector('small').innerHTML = 'If you already paid, <a href="{{ route('full-credit-report.result') }}?rid=' + RECORD_ID + '" style="color:#16a34a;font-weight:700;">click here to view your report</a> — or we\'ll keep checking.';
+    btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-mobile-screen-button"></i> Pay KES ' + PRICE.toLocaleString();
+    pollInterval = setInterval(() => { fetch('{{ route('check-payment-status') }}?rid=' + rid).then(r => r.json()).then(data => { if (data.status === 'completed' || data.status === 'paid' || data.status === 'processing') { clearInterval(pollInterval); showSuccess(); } }); }, 10000);
 }
 
 function stkError(message) {

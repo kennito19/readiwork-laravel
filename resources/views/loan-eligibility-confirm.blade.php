@@ -59,7 +59,7 @@
 .mpesa-logo-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 12px; margin-bottom: 4px; }
 .back-link { display: block; text-align: center; margin-top: 14px; font-size: 0.85rem; color: var(--text-light); }
 .back-link a { color: var(--primary-green); font-weight: 600; }
-@media (max-width: 900px) { .confirm-layout { grid-template-columns: 1fr; } .confirm-hero h1 { font-size: 1.55rem; } .elig-amount { font-size: 2.4rem; } }
+@media (max-width: 900px) { .confirm-layout { grid-template-columns: 1fr; } .order-card { order: -1; } .confirm-hero h1 { font-size: 1.55rem; } .elig-amount { font-size: 2.4rem; } }
 @media (max-width: 500px) { .elig-card-top { padding: 24px 20px 20px; } .elig-card-body { padding: 20px; } .order-card-body { padding: 16px 18px; } .order-card-head { padding: 16px 18px; } .elig-card-top [style*="repeat(3,1fr)"] { grid-template-columns: 1fr !important; } }
 </style>
 @endpush
@@ -81,11 +81,11 @@
                 <div class="elig-card-top">
                     <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.3);border-radius:999px;padding:4px 12px;font-size:.76rem;font-weight:600;color:#4ade80;margin-bottom:12px;"><i class="fa-solid fa-circle-check"></i> Identity Verified</div>
                     <div class="elig-congrats">Congratulations, {{ $demoName }}!</div>
-                    <div class="elig-sub">Your National ID <strong style="color:rgba(255,255,255,.8)">{{ $idNumber }}</strong> has been successfully verified. Based on your credit profile, you are pre-approved for:</div>
+                    <div class="elig-sub">Your National ID <strong style="color:rgba(255,255,255,.8)">{{ $idNumber }}</strong> has been successfully verified. Based on your credit profile, you are pre approved for:</div>
                     <div class="elig-amount-label">Maximum Pre-Qualified Loan Amount</div>
                     <div class="elig-amount">KES {{ number_format($demoAmount) }}</div>
-                    <div style="font-size:.78rem;color:rgba(255,255,255,.45);margin-bottom:12px;">This offer is reserved for you — unlock your eligibility report to claim it</div>
-                    <div class="elig-badge"><i class="fa-solid fa-lock-open"></i> UNLOCK YOUR ELIGIBILITY REPORT FOR KES 1</div>
+                    <div style="font-size:.78rem;color:rgba(255,255,255,.45);margin-bottom:12px;">This offer is reserved for you, unlock your eligibility report to claim it</div>
+                    <div class="elig-badge"><i class="fa-solid fa-lock-open"></i> UNLOCK YOUR ELIGIBILITY REPORT FOR KES {{ number_format($price) }}</div>
                     <div style="margin-top:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:center;">
                         <div style="background:rgba(255,255,255,.06);border-radius:10px;padding:10px 6px;"><div style="font-size:1.1rem;font-weight:800;color:#4ade80;">5+</div><div style="font-size:.68rem;color:rgba(255,255,255,.45);margin-top:2px;">Lenders Ready</div></div>
                         <div style="background:rgba(255,255,255,.06);border-radius:10px;padding:10px 6px;"><div style="font-size:1.1rem;font-weight:800;color:#4ade80;">&lt;5s</div><div style="font-size:.68rem;color:rgba(255,255,255,.45);margin-top:2px;">Report Delivery</div></div>
@@ -100,7 +100,7 @@
                         <div class="locked-item"><div class="locked-icon" style="background:rgba(245,158,11,0.12);color:#d97706;"><i class="fa-solid fa-percent"></i></div><div style="flex:1;"><div style="font-size:.88rem;font-weight:600;color:var(--primary-navy);">Personalized Interest Rates &amp; Plans</div><div style="font-size:.76rem;color:var(--text-light);margin-top:2px;">Tailored repayment schedules for your income</div></div><i class="fa-solid fa-lock lock-icon"></i></div>
                         <div class="locked-item"><div class="locked-icon" style="background:rgba(15,169,88,0.12);color:#0FA958;"><i class="fa-solid fa-arrow-trend-up"></i></div><div style="flex:1;"><div style="font-size:.88rem;font-weight:600;color:var(--primary-navy);">Tips to Increase Your Eligible Amount</div><div style="font-size:.76rem;color:var(--text-light);margin-top:2px;">Actionable steps to boost your credit score</div></div><i class="fa-solid fa-lock lock-icon"></i></div>
                     </div>
-                    <div class="locked-cta-note"><i class="fa-solid fa-circle-info"></i><span>Pay <strong>KES 1</strong> once to unlock your complete eligibility report — your Credit Score, all lenders who can approve you today, and a step-by-step plan to borrow up to <strong>KES {{ number_format($demoAmount) }}</strong>.</span></div>
+                    <div class="locked-cta-note"><i class="fa-solid fa-circle-info"></i><span>Pay <strong>KES {{ number_format($price) }}</strong> once to unlock your complete eligibility report, your Credit Score, all lenders who can approve you today, and a step by step plan to borrow up to <strong>KES {{ number_format($demoAmount) }}</strong>.</span></div>
                     <div style="margin-top:14px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:11px 14px;font-size:.82rem;color:#92400e;display:flex;gap:8px;align-items:center;"><i class="fa-solid fa-clock" style="color:#d97706;flex-shrink:0;"></i>Your pre-qualification quote of <strong>KES {{ number_format($demoAmount) }}</strong> is saved. Complete payment now to lock in this amount.</div>
                     <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:18px;padding-top:16px;border-top:1px solid var(--border-color);">
                         <span style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--text-light);"><i class="fa-solid fa-shield-halved" style="color:#16a34a;"></i> CRB-verified data</span>
@@ -120,7 +120,7 @@
                     <div class="order-row"><span class="order-label">National ID</span><span class="order-val">{{ $idNumber }}</span></div>
                     <div class="order-row"><span class="order-label">Report Type</span><span class="order-val">Loan Eligibility Assessment</span></div>
                     <div class="order-row"><span class="order-label">Delivery</span><span class="order-val">Instant <span style="color:#16a34a; font-size:0.78rem;">(after payment)</span></span></div>
-                    <div class="order-total"><span class="order-total-label">Total Payable</span><span class="order-total-val">KES 299</span></div>
+                    <div class="order-total"><span class="order-total-label">Total Payable</span><span class="order-total-val">KES {{ number_format($price) }}</span></div>
                     <p class="order-note"><i class="fa-solid fa-shield-halved"></i> AI-powered loan eligibility and risk assessment.<br><i class="fa-solid fa-lock"></i> Confidential and instant delivery after payment.</p>
                     <div class="mpesa-section">
                         <label class="mpesa-label" for="mpesa_phone">M-Pesa Phone Number</label>
@@ -131,7 +131,7 @@
                         <p class="mpesa-hint">Enter the number registered with M-Pesa. You will receive an STK push to confirm payment.</p>
                     </div>
                     <div class="stk-pending" id="stkPending"><div class="stk-spinner"></div><p>STK Push Sent!</p><small>Check your phone and enter your M-Pesa PIN to complete payment.</small></div>
-                    <button type="button" class="unlock-btn" id="payBtn" onclick="initiateStk()"><i class="fa-solid fa-mobile-screen-button"></i> Pay KES 1 via M-Pesa</button>
+                    <button type="button" class="unlock-btn" id="payBtn" onclick="initiateStk()"><i class="fa-solid fa-mobile-screen-button"></i> Pay KES {{ number_format($price) }} via M-Pesa</button>
                     <div class="mpesa-logo-row"><span style="font-size:0.78rem; color:#6b7280;">Secured by</span><span style="font-weight:800; color:#16a34a; font-size:0.92rem; letter-spacing:-0.3px;">M-PESA</span><span style="font-size:0.78rem; color:#6b7280;">&middot; Safaricom</span></div>
                     <p class="back-link"><a href="{{ route('loan-eligibility') }}"><i class="fa-solid fa-arrow-left"></i> Run a different check</a></p>
                 </div>
@@ -162,7 +162,7 @@ function initiateStk() {
     fetch('{{ route('stk-push') }}', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-        body: JSON.stringify({ phone: raw, amount: 1, service: 'loan-eligibility', id: ID_NUMBER, record_id: RECORD_ID }),
+        body: JSON.stringify({ phone: raw, amount: {{ $price }}, service: 'loan-eligibility', id: ID_NUMBER, record_id: RECORD_ID }),
     })
     .then(r => r.json())
     .then(data => { if (data.success) { pollPayment(data.request_id); } else { stkError(data.message || 'Payment request failed. Please try again.'); } })
@@ -170,18 +170,25 @@ function initiateStk() {
 }
 
 function pollPayment(stkRequestId) {
-    let attempts = 0;
+    let attempts = 0, secs = 0;
+    const pEl = document.getElementById('stkPending'), msgEl = pEl.querySelector('p'), subEl = pEl.querySelector('small');
+    const tick = setInterval(() => {
+        secs++;
+        if (secs === 12) { msgEl.textContent = 'Processing Payment…'; subEl.textContent = 'M-Pesa is confirming. This takes 1–2 minutes — keep this page open.'; }
+        if (secs >= 12) { subEl.textContent = 'Confirming with M-Pesa… ' + secs + 's'; }
+        if (secs === 35) { subEl.innerHTML = 'Taking a moment. Already entered PIN? <a href="{{ route('loan-eligibility.result') }}?rid=' + RECORD_ID + '" style="color:#16a34a;font-weight:700;">Check my result →</a>'; }
+    }, 1000);
     pollInterval = setInterval(() => {
         attempts++;
         fetch('{{ route('check-payment-status') }}?rid=' + stkRequestId)
             .then(r => r.json())
             .then(data => {
-                if (data.status === 'completed' || data.status === 'paid') { clearInterval(pollInterval); showSuccess(); }
-                else if (data.status === 'payment_failed') { clearInterval(pollInterval); stkError(data.payment_error || 'Payment was not completed.'); }
-                else if (attempts >= 36) { clearInterval(pollInterval); stkError('Payment timed out. Please try again or contact support.'); }
+                if (data.status === 'completed' || data.status === 'paid' || data.status === 'processing') { clearInterval(tick); clearInterval(pollInterval); showSuccess(); }
+                else if (data.status === 'payment_failed') { clearInterval(tick); clearInterval(pollInterval); stkError(data.payment_error || 'Payment was not completed.'); }
+                else if (attempts >= 100) { clearInterval(tick); clearInterval(pollInterval); stkTimeout(stkRequestId); }
             })
             .catch(() => {});
-    }, 3000);
+    }, 5000);
 }
 
 function showSuccess() {
@@ -189,15 +196,25 @@ function showSuccess() {
     pending.style.borderColor = '#4ade80';
     pending.querySelector('.stk-spinner').style.display = 'none';
     pending.querySelector('p').textContent = 'Payment Confirmed!';
-    pending.querySelector('small').textContent = 'Redirecting to your report\u2026';
+    pending.querySelector('small').textContent = 'Redirecting to your report…';
     setTimeout(() => { window.location.href = '{{ route('loan-eligibility.result') }}?rid=' + RECORD_ID; }, 1200);
+}
+
+function stkTimeout(rid) {
+    const pending = document.getElementById('stkPending'), btn = document.getElementById('payBtn');
+    pending.style.background = '#fffbeb'; pending.style.borderColor = '#fcd34d';
+    pending.querySelector('.stk-spinner').style.display = 'none';
+    pending.querySelector('p').textContent = 'Taking longer than usual…';
+    pending.querySelector('small').innerHTML = 'If you already paid, <a href="{{ route('loan-eligibility.result') }}?rid=' + RECORD_ID + '" style="color:#16a34a;font-weight:700;">click here to view your report</a> — or we\'ll keep checking.';
+    btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-mobile-screen-button"></i> Pay KES {{ $price }} via M-Pesa';
+    pollInterval = setInterval(() => { fetch('{{ route('check-payment-status') }}?rid=' + rid).then(r => r.json()).then(data => { if (data.status === 'completed' || data.status === 'paid' || data.status === 'processing') { clearInterval(pollInterval); showSuccess(); } }); }, 10000);
 }
 
 function stkError(msg) {
     clearInterval(pollInterval);
     const pending = document.getElementById('stkPending'), btn = document.getElementById('payBtn');
     pending.classList.remove('show'); btn.disabled = false;
-    btn.innerHTML = '<i class="fa-solid fa-mobile-screen-button"></i> Pay KES 1 via M-Pesa';
+    btn.innerHTML = '<i class="fa-solid fa-mobile-screen-button"></i> Pay KES {{ $price }} via M-Pesa';
     let err = document.getElementById('stkErr');
     if (!err) { err = document.createElement('p'); err.id = 'stkErr'; err.style.cssText = 'color:#dc2626;font-size:0.82rem;margin:8px 0 0;text-align:center;'; btn.parentNode.insertBefore(err, btn.nextSibling); }
     err.textContent = msg;

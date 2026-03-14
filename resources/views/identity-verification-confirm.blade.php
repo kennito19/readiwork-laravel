@@ -37,7 +37,7 @@
 .unlock-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:#16a34a;color:#fff;border:none;border-radius:12px;padding:16px 20px;font-size:1.05rem;font-weight:700;cursor:pointer;transition:background .2s,transform .15s;}
 .unlock-btn:hover{background:#15803d;transform:translateY(-1px);}
 .unlock-btn:disabled{background:#6b7280;cursor:not-allowed;transform:none;}
-@media(max-width:900px){.confirm-layout{grid-template-columns:1fr;}}
+@media(max-width:900px){.confirm-layout{grid-template-columns:1fr;}.order-card{order:-1;}}
 </style>
 @endpush
 
@@ -47,7 +47,7 @@
         <div class="confirm-hero-eyebrow"><i class="fa-solid fa-id-card"></i> Identity Verification &nbsp;·&nbsp; Step 2 of 2</div>
       
         {{-- REPLACE WITH --}}
-<h1>Hi there 👋 — ID Located</h1>
+<h1>Hi there 👋, ID Located</h1>
 <p>National ID <strong style="color:#4ade80;">{{ $idNumber }}</strong> has been found. Complete payment below to unlock the full identity details.</p>
         
         
@@ -74,7 +74,7 @@
                     </div>
                 </div>
                 <div style="display:grid;gap:10px;">
-                    @foreach([['fa-circle-check','#0FA958','ID Validity Status','Confirms the National ID is valid and active in the Kenya IPRS registry.'],['fa-user','#6366f1','Full Registered Name','Returns first name, other name, and surname as registered with the government.'],['fa-fingerprint','#0ea5e9','Identity Match','Verifies the ID matches a real person — protecting against fraud.']] as $f)
+                    @foreach([['fa-circle-check','#0FA958','ID Validity Status','Confirms the National ID is valid and active in the Kenya IPRS registry.'],['fa-user','#6366f1','Full Registered Name','Returns first name, other name, and surname as registered with the government.'],['fa-fingerprint','#0ea5e9','Identity Match','Verifies the ID matches a real person, protecting against fraud.']] as $f)
                     <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:#f8fafc;border:1px solid var(--border-color);border-radius:10px;">
                         <div style="width:32px;height:32px;border-radius:8px;background:{{ $f[1] }}18;color:{{ $f[1] }};display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0;"><i class="fa-solid {{ $f[0] }}"></i></div>
                         <div><div style="font-size:.88rem;font-weight:600;color:var(--primary-navy);margin-bottom:2px;">{{ $f[2] }}</div><div style="font-size:.76rem;color:var(--text-light);">{{ $f[3] }}</div></div>
@@ -107,7 +107,7 @@
                     <div class="order-row"><span class="order-label">Report Type</span><span class="order-val">Kenya IPRS Registry Check</span></div>
                     <div class="order-row"><span class="order-label">Delivery</span><span class="order-val">Instant <span style="color:#16a34a;font-size:.78rem;">(after payment)</span></span></div>
                     <div class="order-total"><span class="order-total-label">Total Payable</span><span class="order-total-val">KES {{ number_format($price) }}</span></div>
-                    <p style="font-size:.78rem;color:var(--text-light);line-height:1.6;margin-bottom:18px;"><i class="fa-solid fa-shield-halved" style="color:var(--primary-green);"></i> Instant identity verification via Metropol CRB &amp; IPRS.</p>
+                    <p style="font-size:.78rem;color:var(--text-light);line-height:1.6;margin-bottom:18px;"><i class="fa-solid fa-shield-halved" style="color:var(--primary-green);"></i> Instant identity verification via Kenya CRB &amp; IPRS.</p>
                     <div class="mpesa-section">
                         <label class="mpesa-label" for="mpesa_phone">M-Pesa Phone Number</label>
                         <div class="mpesa-input-wrap">
@@ -152,17 +152,25 @@ function initiateStk() {
 }
 
 function pollPayment(rid) {
-    let attempts = 0;
+    let attempts = 0, secs = 0;
+    const pEl = document.getElementById('stkPending');
+    const msgEl = pEl.querySelector('p'), subEl = pEl.querySelector('small');
+    const tick = setInterval(() => {
+        secs++;
+        if (secs === 12) { msgEl.textContent = 'Processing Payment…'; subEl.textContent = 'M-Pesa is confirming. This takes 1–2 minutes — keep this page open.'; }
+        if (secs >= 12) { subEl.textContent = 'Confirming with M-Pesa… ' + secs + 's'; }
+        if (secs === 35) { subEl.innerHTML = 'Taking a moment. Already entered PIN? <a href="{{ route('identity-verification.result') }}?rid=' + rid + '" style="color:#16a34a;font-weight:700;">Check my result →</a>'; }
+    }, 1000);
     pollInterval = setInterval(() => {
         attempts++;
         fetch('{{ route('check-payment-status') }}?rid=' + rid)
             .then(r => r.json())
             .then(data => {
-                if (data.status === 'completed' || data.status === 'paid') { clearInterval(pollInterval); showSuccess(rid); }
-                else if (data.status === 'payment_failed') { clearInterval(pollInterval); stkError(data.payment_error || 'Payment not completed.'); }
-                else if (attempts >= 36) { clearInterval(pollInterval); stkError('Payment timed out. Please try again.'); }
+                if (data.status === 'completed' || data.status === 'paid' || data.status === 'processing') { clearInterval(tick); clearInterval(pollInterval); showSuccess(rid); }
+                else if (data.status === 'payment_failed') { clearInterval(tick); clearInterval(pollInterval); stkError(data.payment_error || 'Payment not completed.'); }
+                else if (attempts >= 100) { clearInterval(tick); clearInterval(pollInterval); stkTimeout(rid); }
             }).catch(() => {});
-    }, 3000);
+    }, 5000);
 }
 
 function showSuccess(rid) {
@@ -172,6 +180,16 @@ function showSuccess(rid) {
     p.querySelector('p').textContent = 'Payment Confirmed!';
     p.querySelector('small').textContent = 'Redirecting to your result…';
     setTimeout(() => { window.location.href = '{{ route('identity-verification.result') }}?rid=' + rid; }, 1200);
+}
+
+function stkTimeout(rid) {
+    const p = document.getElementById('stkPending'), btn = document.getElementById('payBtn');
+    p.style.background = '#fffbeb'; p.style.borderColor = '#fcd34d';
+    p.querySelector('.stk-spinner').style.display = 'none';
+    p.querySelector('p').textContent = 'Taking longer than usual…';
+    p.querySelector('small').innerHTML = 'If you already paid, <a href="{{ route('identity-verification.result') }}?rid=' + rid + '" style="color:#16a34a;font-weight:700;">click here to view your result</a> — or we\'ll keep checking.';
+    btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-mobile-screen-button"></i> Pay KES {{ number_format($price) }} via M-Pesa';
+    pollInterval = setInterval(() => { fetch('{{ route('check-payment-status') }}?rid=' + rid).then(r => r.json()).then(data => { if (data.status === 'completed' || data.status === 'paid' || data.status === 'processing') { clearInterval(pollInterval); showSuccess(rid); } }); }, 10000);
 }
 
 function stkError(msg) {
