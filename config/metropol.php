@@ -6,4 +6,5 @@ return [
     'version'     => env('METROPOL_VERSION', 'v2_1'),
     'public_key'  => env('METROPOL_PUBLIC_KEY', ''),
     'private_key' => env('METROPOL_PRIVATE_KEY', ''),
+    'sandbox'     => env('METROPOL_SANDBOX', false),
 ];
