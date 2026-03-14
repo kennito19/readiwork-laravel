@@ -137,6 +137,8 @@ class CreditAccountHistoryController extends Controller
                         if ($pollUpdate) { $req->update($pollUpdate); $req->refresh(); }
                     } else {
                         $crb = $rawResult;
+                        $req->update(['status' => 'completed', 'result' => json_encode($rawResult)]);
+                        $req->refresh();
                     }
 
                 } else {

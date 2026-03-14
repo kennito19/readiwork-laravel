@@ -156,6 +156,8 @@ class FullCreditReportController extends Controller
                         if ($pollUpdate) { $req->update($pollUpdate); $req->refresh(); }
                     } else {
                         $crb = $rawResult;
+                        $req->update(['status' => 'completed', 'result' => json_encode($rawResult)]);
+                        $req->refresh();
                     }
 
                 } else {
@@ -185,7 +187,84 @@ class FullCreditReportController extends Controller
     public function downloadPdf(int $rid)
     {
         $req = VerificationRequest::findOrFail($rid);
+
+        if (!in_array($req->status, ['paid', 'completed'])) {
+            abort(403, 'Report not available.');
+        }
+
         $crb = $req->result ? json_decode($req->result, true) : [];
-        return view('full-credit-report-pdf', compact('req', 'crb'));
+        if (!is_array($crb)) $crb = [];
+
+        $ci      = isset($crb['credit_info']) ? $crb['credit_info'] : $crb;
+        $idv     = $ci['identity_verification'] ?? [];
+        $scrub   = $ci['identity_scrub']        ?? [];
+        $accts   = $ci['account_info']          ?? [];
+        $sectors = $ci['lender_sector']         ?? [];
+
+        $fullName = trim(implode(' ', array_filter([$idv['first_name'] ?? '', $idv['other_name'] ?? '', $idv['surname'] ?? ''])));
+        if (!$fullName && !empty($scrub['names'][0])) $fullName = $scrub['names'][0];
+        if (!$fullName) $fullName = $req->full_name ?? 'N/A';
+        $idNum  = $req->national_id ?? ($idv['id_number'] ?? 'N/A');
+        $dob    = $idv['dob']    ?? ($req->dob    ?? null);
+        $gender = $idv['gender'] ?? ($req->gender ?? null);
+
+        $score        = $ci['credit_score']     ?? null;
+        $deliqCode    = $ci['delinquency_code'] ?? null;
+        $isDelinquent = ($deliqCode === 'D' || $deliqCode === '1' || $deliqCode === 1);
+        $trxId        = $ci['trx_id']           ?? null;
+
+        $scoreColor = '#6b7280'; $scoreLabel = 'No Score'; $scoreBand = 'No credit history found';
+        if ($score !== null) {
+            if ($score >= 700)     { $scoreColor = '#16a34a'; $scoreLabel = 'Excellent'; $scoreBand = 'Very low credit risk, preferred borrower'; }
+            elseif ($score >= 600) { $scoreColor = '#0e7c7c'; $scoreLabel = 'Good';      $scoreBand = 'Below average credit risk'; }
+            elseif ($score >= 500) { $scoreColor = '#d97706'; $scoreLabel = 'Fair';      $scoreBand = 'Average credit risk'; }
+            elseif ($score >= 400) { $scoreColor = '#ea580c'; $scoreLabel = 'Poor';      $scoreBand = 'Above average credit risk'; }
+            else                   { $scoreColor = '#dc2626'; $scoreLabel = 'Very Poor'; $scoreBand = 'High credit risk'; }
+        }
+
+        usort($accts, function ($a, $b) {
+            $aA = in_array(strtolower($a['account_status'] ?? ''), ['a', 'active']);
+            $bA = in_array(strtolower($b['account_status'] ?? ''), ['a', 'active']);
+            if ($aA !== $bA) return $bA <=> $aA;
+            return strcmp($b['opening_date'] ?? '', $a['opening_date'] ?? '');
+        });
+
+        $totalAccts       = count($accts);
+        $totalActive      = count(array_filter($accts, fn($a) => in_array(strtolower($a['account_status'] ?? ''), ['a', 'active'])));
+        $totalOutstanding = array_sum(array_column($accts, 'outstanding_balance'));
+        $totalArrears     = array_sum(array_column($accts, 'arrears_amount'));
+
+        $_enqR = $ci['no_of_enquiries']         ?? 0;
+        $_appR = $ci['no_of_credit_applications']?? 0;
+        $_bcR  = $ci['no_of_bounced_cheques']   ?? 0;
+        $noEnq = is_array($_enqR) ? count($_enqR) : (int)$_enqR;
+        $noApp = is_array($_appR) ? count($_appR) : (int)$_appR;
+        $noBnc = is_array($_bcR)  ? count($_bcR)  : (int)$_bcR;
+        $isGuar = $ci['is_guarantor'] ?? false;
+        $hasFrd = $ci['has_fraud']    ?? false;
+
+        $maxSecBal = !empty($sectors) ? max(array_map(fn($s) => (float)($s['outstanding_balance'] ?? $s['balance'] ?? 0), $sectors)) : 1;
+        if ($maxSecBal <= 0) $maxSecBal = 1;
+
+        $reportDate = $req->updated_at->format('j F Y, g:i A');
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('full-credit-report-pdf', compact(
+            'req', 'fullName', 'idNum', 'dob', 'gender', 'scrub',
+            'score', 'deliqCode', 'isDelinquent', 'trxId',
+            'scoreColor', 'scoreLabel', 'scoreBand',
+            'accts', 'totalAccts', 'totalActive', 'totalOutstanding', 'totalArrears',
+            'noEnq', 'noApp', 'noBnc', 'isGuar', 'hasFrd',
+            'sectors', 'maxSecBal', 'reportDate'
+        ))
+        ->setPaper('a4', 'portrait')
+        ->setOptions([
+            'defaultFont'          => 'DejaVu Sans',
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled'      => false,
+            'dpi'                  => 96,
+        ]);
+
+        $filename = 'readiwork-full-credit-report-' . $idNum . '-' . now()->format('Ymd') . '.pdf';
+        return $pdf->download($filename);
     }
 }

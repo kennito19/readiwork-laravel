@@ -149,6 +149,8 @@ class IdentityVerificationController extends Controller
                         // Still nothing after 2s — use whatever rawResult we got
                         // (scrub data is often still valid even when verify is E409)
                         $crb = $rawResult;
+                        $req->update(['status' => 'completed', 'result' => json_encode($rawResult)]);
+                        $req->refresh();
                     }
 
                 } else {
@@ -327,7 +329,7 @@ class IdentityVerificationController extends Controller
             'defaultFont'          => 'DejaVu Sans',
             'isHtml5ParserEnabled' => true,
             'isRemoteEnabled'      => false,
-            'dpi'                  => 300,
+            'dpi'                  => 96,
         ]);
 
         $filename = 'readiwork-identity-' . $id_number . '-' . now()->format('Ymd') . '.pdf';

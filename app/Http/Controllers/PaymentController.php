@@ -100,9 +100,17 @@ class PaymentController extends Controller
                 if ($resultCode === 0) {
                     $row->update(['status' => 'paid', 'mpesa_receipt_number' => 'STK-CONFIRMED-' . time()]);
                     $row->status = 'paid';
-                } elseif (in_array($resultCode, [1032, 1, 2001, 17])) {
-                    $errMap = [1032 => 'Cancelled by user', 1 => 'Insufficient funds', 2001 => 'Wrong PIN', 17 => 'Not registered for M-Pesa'];
-                    $errMsg = $errMap[$resultCode] ?? 'Payment failed (code ' . $resultCode . ')';
+                } elseif ($resultCode !== 4999) {
+                    // Any code that isn't 0 (success) or 4999 (still processing) is a failure
+                    $errMap = [
+                        1    => 'Insufficient funds',
+                        17   => 'Not registered for M-Pesa',
+                        1032 => 'Cancelled — please try again',
+                        1037 => 'No PIN entered — please try again',
+                        1025 => 'Phone unreachable — please try again',
+                        2001 => 'Wrong PIN entered',
+                    ];
+                    $errMsg = $errMap[$resultCode] ?? 'Payment not completed (code ' . $resultCode . ')';
                     $row->update(['status' => 'payment_failed', 'payment_error' => $errMsg]);
                     $row->status        = 'payment_failed';
                     $row->payment_error = $errMsg;

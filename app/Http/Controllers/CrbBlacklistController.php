@@ -16,8 +16,82 @@ class CrbBlacklistController extends Controller
     public function downloadPdf(int $rid)
     {
         $req = VerificationRequest::findOrFail($rid);
+
+        if (!in_array($req->status, ['paid', 'completed'])) {
+            abort(403, 'Report not available.');
+        }
+
         $crb = $req->result ? json_decode($req->result, true) : [];
-        return view('crb-blacklist-check-pdf', compact('req', 'crb'));
+        if (!is_array($crb)) $crb = [];
+
+        $delinquency  = $crb['delinquency']  ?? [];
+        $scrub_data   = $crb['scrub']        ?? [];
+        $credit_info  = $crb['credit_info']  ?? [];
+
+        $full_name   = $scrub_data['names'][0] ?? $req->full_name ?? 'Applicant';
+        $id_number   = $req->national_id;
+        $dob_raw     = $scrub_data['date_of_being'][0] ?? null;
+        $gender_raw  = $scrub_data['gender'][0] ?? null;
+        $gender_label = $gender_raw ? match(strtoupper((string)$gender_raw)) {
+            'M' => 'Male', 'F' => 'Female', default => $gender_raw
+        } : 'N/A';
+        $scrub_phones = $scrub_data['phone']      ?? [];
+        $scrub_emails = $scrub_data['email']      ?? [];
+        $scrub_employ = $scrub_data['employment'] ?? [];
+
+        try {
+            $dob_fmt = $dob_raw ? \Carbon\Carbon::parse($dob_raw)->format('j F Y') : 'N/A';
+        } catch (\Exception $e) {
+            $dob_fmt = $dob_raw ?? 'N/A';
+        }
+
+        $delinquency_code    = (string)($delinquency['delinquency_code'] ?? $delinquency['deliquency_code'] ?? '');
+        $delinquency_summary = $delinquency['delinquency_summary'] ?? null;
+        $outstanding_bal     = (float)($delinquency['outstanding_balance'] ?? $credit_info['total_outstanding_balance'] ?? 0);
+        $no_facilities       = (int)($delinquency['no_of_facilities'] ?? $credit_info['total_accounts'] ?? 0);
+        $overdue_amount      = (float)($credit_info['total_overdue_amount'] ?? $delinquency['overdue_amount'] ?? 0);
+        $npa_accounts        = (int)($credit_info['npa_accounts'] ?? $credit_info['total_npa'] ?? 0);
+        $performing_accounts = (int)($credit_info['performing_accounts'] ?? max(0, $no_facilities - $npa_accounts));
+        $accounts            = $credit_info['account_info'] ?? $credit_info['credit_accounts'] ?? $credit_info['accounts'] ?? [];
+
+        $code_info = [
+            '001' => ['No Adverse Credit History',         '#16a34a', '#edfaf3', '#a3d9b8', false],
+            '002' => ['Good Standing, All Loans Serviced', '#0e7c7c', '#e6f3f3', '#a3c4c4', false],
+            '003' => ['Caution, Some Late Payments',       '#d97706', '#fffbeb', '#fde68a', false],
+            '004' => ['Delinquent, Defaulted Loan(s)',      '#dc2626', '#fef2f2', '#fca5a5', true],
+            '005' => ['Written Off, Debt Written Off',      '#991b1b', '#fef2f2', '#fca5a5', true],
+        ];
+        [$code_label, $code_color, $code_bg, $code_border, $is_blacklisted] =
+            $code_info[$delinquency_code] ?? ['Status Unknown', '#6b7280', '#f8fafc', '#e2e8f0', false];
+
+        $delinq_expl_text = [
+            '001' => 'No lender has ever reported a problem with your repayments. Your CRB record is completely clean.',
+            '002' => 'All your credit facilities are being serviced on time. You have an excellent repayment track record.',
+            '003' => 'Some late or missed payments appear on your record. You are not yet blacklisted but this may affect loan approvals.',
+            '004' => 'One or more of your loans are unpaid and a lender has flagged you on the CRB. This is blocking new loan approvals.',
+            '005' => 'A lender has written off your debt as uncollectable. This is the most severe CRB listing and requires immediate attention.',
+        ][$delinquency_code] ?? 'Your CRB delinquency status has been retrieved from Kenya CRB.';
+
+        $report_date = now()->format('j F Y, g:i A');
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('crb-blacklist-check-pdf', compact(
+            'req', 'full_name', 'id_number', 'dob_fmt', 'gender_label',
+            'scrub_phones', 'scrub_emails', 'scrub_employ',
+            'delinquency_code', 'delinquency_summary', 'code_label', 'code_color',
+            'code_bg', 'code_border', 'is_blacklisted', 'delinq_expl_text',
+            'outstanding_bal', 'no_facilities', 'overdue_amount',
+            'npa_accounts', 'performing_accounts', 'accounts', 'report_date'
+        ))
+        ->setPaper('a4', 'portrait')
+        ->setOptions([
+            'defaultFont'          => 'DejaVu Sans',
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled'      => false,
+            'dpi'                  => 96,
+        ]);
+
+        $filename = 'readiwork-crb-blacklist-' . $id_number . '-' . now()->format('Ymd') . '.pdf';
+        return $pdf->download($filename);
     }
 
     public function index()
@@ -141,6 +215,8 @@ class CrbBlacklistController extends Controller
                         if ($pollUpdate) { $req->update($pollUpdate); $req->refresh(); }
                     } else {
                         $crb = $rawResult;
+                        $req->update(['status' => 'completed', 'result' => json_encode($rawResult)]);
+                        $req->refresh();
                     }
 
                 } else {
