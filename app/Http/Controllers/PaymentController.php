@@ -82,6 +82,16 @@ class PaymentController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Not found']);
         }
 
+        // 'processing' = payment confirmed, Metropol call in progress — tell frontend to keep waiting
+        if ($row->status === 'processing') {
+            return response()->json([
+                'status'        => 'paid',
+                'has_result'    => false,
+                'has_receipt'   => !empty($row->mpesa_receipt_number),
+                'payment_error' => null,
+            ]);
+        }
+
         if ($row->status === 'pending_payment' && $row->checkout_request_id) {
             $mpesa = new MpesaService();
             $stkStatus = $mpesa->queryStkStatus($row->checkout_request_id);

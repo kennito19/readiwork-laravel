@@ -106,8 +106,26 @@ class LoanEligibilityController extends Controller
             }
         }
 
-        // ── No valid cache — call API ──
+        // ── No valid cache — call API (atomic: only one concurrent request proceeds) ──
         if (!$crb) {
+            $claimed = \DB::table('verification_requests')
+                ->where('id', $rid)->where('status', 'paid')
+                ->update(['status' => 'processing']);
+
+            if (!$claimed) {
+                $waited = 0;
+                do { usleep(400000); $waited += 400; $req->refresh(); } while (!$req->result && $waited < 10000);
+                if ($req->result) {
+                    $crb = json_decode($req->result, true) ?? [];
+                } else {
+                    $crbError = 'Report is being processed. Please refresh in a moment.';
+                    $crb = [];
+                }
+            }
+        }
+
+        if (!$crb && !$crbError) {
+            $req->refresh();
             try {
                 $metropol  = new MetropolService();
                 $rawResult = $metropol->loanEligibility($req->national_id);
@@ -193,12 +211,16 @@ class LoanEligibilityController extends Controller
                     }
 
                 } else {
-                    $crbError = 'The registry returned an unexpected response. Please try again.';
+                    $req->update(['status' => 'completed', 'result' => json_encode($rawResult)]);
+                    $req->refresh();
+                    $crbError = 'The registry returned an unexpected response (code: ' . ($apiCode ?? 'unknown') . ').';
                     $crb = [];
                 }
 
             } catch (\Exception $e) {
                 $crbError = $e->getMessage();
+                \DB::table('verification_requests')->where('id', $rid)
+                    ->where('status', 'processing')->update(['status' => 'paid']);
                 Log::error('[LOAN-ELIGIBILITY] exception', [
                     'rid'   => $rid,
                     'error' => $e->getMessage(),
