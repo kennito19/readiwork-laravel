@@ -54,7 +54,7 @@ class IdentityVerificationController extends Controller
 
         // Always re-fetch fresh from DB — never trust a stale object
         $req = VerificationRequest::find($rid);
-        if (!$req || !in_array($req->status, ['paid', 'completed'])) {
+        if (!$req || !in_array($req->status, ['paid', 'completed', 'processing'])) {
             return redirect()->route('identity-verification');
         }
 
@@ -262,7 +262,7 @@ class IdentityVerificationController extends Controller
     {
         $req = VerificationRequest::find($rid);
 
-        if (!$req || !in_array($req->status, ['paid', 'completed'])) {
+        if (!$req || !in_array($req->status, ['paid', 'completed', 'processing'])) {
             abort(403, 'Report not available.');
         }
 

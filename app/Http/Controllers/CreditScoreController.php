@@ -17,7 +17,7 @@ class CreditScoreController extends Controller
     {
         $req = VerificationRequest::findOrFail($rid);
 
-        if (!in_array($req->status, ['paid', 'completed'])) {
+        if (!in_array($req->status, ['paid', 'completed', 'processing'])) {
             abort(403, 'Report not available.');
         }
 
@@ -160,7 +160,7 @@ class CreditScoreController extends Controller
         if (!$rid) return redirect()->route('credit-score-check');
 
         $req = VerificationRequest::find($rid);
-        if (!$req || !in_array($req->status, ['paid', 'completed'])) {
+        if (!$req || !in_array($req->status, ['paid', 'completed', 'processing'])) {
             return redirect()->route('credit-score-check');
         }
 
